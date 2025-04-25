@@ -433,10 +433,10 @@ where
                 .expand(self.padding)
         };
 
-        let menu_node = layout::Node::new(Size::new(
-            max_menu_text_width + text_size.0 + self.padding.left,
-            0.0,
-        ));
+        let menu_width = max_menu_text_width + text_size.0 + self.padding.left;
+        let menu_width = menu_width.max(size.width);
+
+        let menu_node = layout::Node::new(Size::new(menu_width, 0.0));
         layout::Node::with_children(size, vec![menu_node])
         let menu_width = max_menu_text_width + text_size.0 + self.padding.left;
         let menu_width = menu_width.max(size.width);
