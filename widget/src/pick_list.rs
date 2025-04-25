@@ -398,7 +398,18 @@ where
             state.options.iter().fold(0.0, |width, paragraph| {
                 f32::max(width, paragraph.min_width())
             });
+        let max_menu_text_width =
+            state.options.iter().fold(0.0, |width, paragraph| {
+                f32::max(width, paragraph.min_width())
+            });
 
+        let max_width = match self.width {
+            Length::Shrink => max_menu_text_width.max(
+                self.placeholder
+                    .as_ref()
+                    .map(|_| state.placeholder.min_width())
+                    .unwrap_or(0.0),
+            ),
         let max_width = match self.width {
             Length::Shrink => max_menu_text_width.max(
                 self.placeholder
@@ -422,6 +433,11 @@ where
                 .expand(self.padding)
         };
 
+        let menu_node = layout::Node::new(Size::new(
+            max_menu_text_width + text_size.0 + self.padding.left,
+            0.0,
+        ));
+        layout::Node::with_children(size, vec![menu_node])
         let menu_width = max_menu_text_width + text_size.0 + self.padding.left;
         let menu_width = menu_width.max(size.width);
 
