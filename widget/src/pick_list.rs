@@ -394,20 +394,18 @@ where
             });
         }
 
-        let max_width = match self.width {
-            Length::Shrink => {
-                let labels_width =
-                    state.options.iter().fold(0.0, |width, paragraph| {
-                        f32::max(width, paragraph.min_width())
-                    });
+        let max_menu_text_width =
+            state.options.iter().fold(0.0, |width, paragraph| {
+                f32::max(width, paragraph.min_width())
+            });
 
-                labels_width.max(
-                    self.placeholder
-                        .as_ref()
-                        .map(|_| state.placeholder.min_width())
-                        .unwrap_or(0.0),
-                )
-            }
+        let max_width = match self.width {
+            Length::Shrink => max_menu_text_width.max(
+                self.placeholder
+                    .as_ref()
+                    .map(|_| state.placeholder.min_width())
+                    .unwrap_or(0.0),
+            ),
             _ => 0.0,
         };
 
@@ -424,7 +422,11 @@ where
                 .expand(self.padding)
         };
 
-        layout::Node::new(size)
+        let menu_node = layout::Node::new(Size::new(
+            max_menu_text_width + text_size.0 + self.padding.left,
+            0.0,
+        ));
+        layout::Node::with_children(size, vec![menu_node])
     }
 
     fn update(
@@ -568,6 +570,28 @@ where
         _cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
+        fn calculate_text_width<Renderer: text::Renderer>(
+            text: &str,
+            font: Renderer::Font,
+            font_size: Pixels,
+        ) -> f32 {
+            let text = Text {
+                content: text,
+                bounds: Size::INFINITY,
+                size: font_size,
+                line_height: Default::default(),
+                font,
+                align_x: Default::default(),
+                align_y: alignment::Vertical::Center,
+                shaping: Default::default(),
+                wrapping: Default::default(),
+            };
+
+            let p: paragraph::Plain<Renderer::Paragraph> =
+                paragraph::Plain::new(text);
+            p.min_width().ceil()
+        }
+
         let font = self.font.unwrap_or_else(|| renderer.default_font());
         let selected = self.selected.as_ref().map(Borrow::borrow);
         let state = tree.state.downcast_ref::<State<Renderer::Paragraph>>();
@@ -628,29 +652,28 @@ where
 
         if let Some((font, code_point, size, line_height, shaping)) = handle {
             let size = size.unwrap_or_else(|| renderer.default_size());
-
-            renderer.fill_text(
-                Text {
-                    content: code_point.to_string(),
-                    size,
-                    line_height,
-                    font,
-                    bounds: Size::new(
-                        bounds.width,
-                        f32::from(line_height.to_absolute(size)),
-                    ),
-                    align_x: text::Alignment::Right,
-                    align_y: alignment::Vertical::Center,
-                    shaping,
-                    wrapping: text::Wrapping::default(),
-                },
-                Point::new(
-                    bounds.x + bounds.width - self.padding.right,
-                    bounds.center_y(),
-                ),
-                style.handle_color,
-                *viewport,
+            let handle_bounds = Size::new(
+                bounds.width,
+                f32::from(line_height.to_absolute(size)),
             );
+            let handle_pos = Point::new(
+                bounds.x + bounds.width - self.padding.right,
+                bounds.center_y(),
+            );
+
+            let text = Text {
+                content: code_point.to_string(),
+                size,
+                line_height,
+                font,
+                bounds: handle_bounds,
+                align_x: text::Alignment::Right,
+                align_y: alignment::Vertical::Center,
+                shaping,
+                wrapping: text::Wrapping::default(),
+            };
+
+            renderer.fill_text(text, handle_pos, style.handle_color, *viewport);
         }
 
         let label = selected.map(ToString::to_string);
@@ -659,22 +682,59 @@ where
             let text_size =
                 self.text_size.unwrap_or_else(|| renderer.default_size());
 
+            let text_bounds = Size::new(
+                bounds.width - self.padding.horizontal(),
+                f32::from(self.text_line_height.to_absolute(text_size)),
+            );
+            let text_pos =
+                Point::new(bounds.x + self.padding.left, bounds.center_y());
+
+            let handle_width = 10.0;
+            let text_to_handle_padding = 5.0;
+            let available_width = bounds.width
+                - self.padding.horizontal()
+                - handle_width
+                - text_to_handle_padding;
+
+            let text_width =
+                calculate_text_width::<Renderer>(&label, font, text_size);
+
+            let mut proposed_label = label.clone();
+            if text_width > available_width {
+                for i in (1..proposed_label.len()).rev() {
+                    proposed_label = label
+                        .chars()
+                        .take(i)
+                        .chain(std::iter::repeat('.').take(3))
+                        .collect::<String>();
+
+                    let text_width = calculate_text_width::<Renderer>(
+                        &proposed_label,
+                        font,
+                        text_size,
+                    );
+
+                    if text_width <= available_width {
+                        break;
+                    }
+                }
+            }
+
+            let text = Text {
+                content: proposed_label,
+                size: text_size,
+                line_height: self.text_line_height,
+                font,
+                bounds: text_bounds,
+                align_x: text::Alignment::Default,
+                align_y: alignment::Vertical::Center,
+                shaping: self.text_shaping,
+                wrapping: text::Wrapping::None,
+            };
+
             renderer.fill_text(
-                Text {
-                    content: label,
-                    size: text_size,
-                    line_height: self.text_line_height,
-                    font,
-                    bounds: Size::new(
-                        bounds.width - self.padding.horizontal(),
-                        f32::from(self.text_line_height.to_absolute(text_size)),
-                    ),
-                    align_x: text::Alignment::Default,
-                    align_y: alignment::Vertical::Center,
-                    shaping: self.text_shaping,
-                    wrapping: text::Wrapping::default(),
-                },
-                Point::new(bounds.x + self.padding.left, bounds.center_y()),
+                text,
+                text_pos,
                 if selected.is_some() {
                     style.text_color
                 } else {
@@ -698,6 +758,7 @@ where
 
         if state.is_open {
             let bounds = layout.bounds();
+            let menu_bounds = layout.children().next().unwrap().bounds();
 
             let on_select = &self.on_select;
 
@@ -713,7 +774,7 @@ where
                 None,
                 &self.menu_class,
             )
-            .width(bounds.width)
+            .width(menu_bounds.width)
             .padding(self.padding)
             .font(font)
             .text_shaping(self.text_shaping);
