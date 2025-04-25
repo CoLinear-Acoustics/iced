@@ -576,7 +576,7 @@ where
             font_size: Pixels,
         ) -> f32 {
             let text = Text {
-                content: text,
+                content: text.to_string(),
                 bounds: Size::INFINITY,
                 size: font_size,
                 line_height: Default::default(),
