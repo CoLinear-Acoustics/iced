@@ -265,8 +265,9 @@ where
     fn overlay<'b>(
         &'b mut self,
         tree: &'b mut Tree,
-        layout: Layout<'_>,
+        layout: Layout<'b>,
         renderer: &Renderer,
+        viewport: &Rectangle,
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
         let overlay = InnerBuilder {
@@ -280,10 +281,11 @@ where
                 .take()
                 .unwrap(),
             tree: &mut tree.children[0],
-            overlay_builder: |element, tree| {
+            layout,
+            overlay_builder: |element, tree, layout| {
                 element
                     .as_widget_mut()
-                    .overlay(tree, layout, renderer, translation)
+                    .overlay(tree, *layout, renderer, viewport, translation)
                     .map(|overlay| RefCell::new(Nested::new(overlay)))
             },
         }
@@ -311,8 +313,9 @@ struct Inner<'a, Message: 'a, Theme: 'a, Renderer: 'a> {
     cell: Rc<RefCell<Option<Element<'static, Message, Theme, Renderer>>>>,
     element: Element<'static, Message, Theme, Renderer>,
     tree: &'a mut Tree,
+    layout: Layout<'a>,
 
-    #[borrows(mut element, mut tree)]
+    #[borrows(mut element, mut tree, layout)]
     #[not_covariant]
     overlay: Option<RefCell<Nested<'this, Message, Theme, Renderer>>>,
 }
