@@ -571,7 +571,7 @@ where
         viewport: &Rectangle,
     ) {
         fn calculate_text_width<Renderer: text::Renderer>(
-            text: &str,
+            text: String,
             font: Renderer::Font,
             font_size: Pixels,
         ) -> f32 {
@@ -696,8 +696,11 @@ where
                 - handle_width
                 - text_to_handle_padding;
 
-            let text_width =
-                calculate_text_width::<Renderer>(&label, font, text_size);
+            let text_width = calculate_text_width::<Renderer>(
+                label.clone(),
+                font,
+                text_size,
+            );
 
             let mut proposed_label = label.clone();
             if text_width > available_width {
@@ -709,7 +712,7 @@ where
                         .collect::<String>();
 
                     let text_width = calculate_text_width::<Renderer>(
-                        &proposed_label,
+                        proposed_label.clone(),
                         font,
                         text_size,
                     );
