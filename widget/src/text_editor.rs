@@ -377,6 +377,7 @@ where
 {
     editor: R::Editor,
     is_dirty: bool,
+    shaping: text::Shaping,
 }
 
 impl<R> Content<R>
@@ -384,15 +385,16 @@ where
     R: text::Renderer,
 {
     /// Creates an empty [`Content`].
-    pub fn new() -> Self {
-        Self::with_text("")
+    pub fn new(shaping: text::Shaping) -> Self {
+        Self::with_text("", shaping)
     }
 
     /// Creates a [`Content`] with the given text.
-    pub fn with_text(text: &str) -> Self {
+    pub fn with_text(text: &str, shaping: text::Shaping) -> Self {
         Self(RefCell::new(Internal {
-            editor: R::Editor::with_text(text),
+            editor: R::Editor::with_text(text, shaping),
             is_dirty: true,
+            shaping,
         }))
     }
 
@@ -469,7 +471,7 @@ where
     Renderer: text::Renderer,
 {
     fn clone(&self) -> Self {
-        Self::with_text(&self.text())
+        Self::with_text(&self.text(), self.0.borrow().shaping)
     }
 }
 
@@ -478,7 +480,7 @@ where
     Renderer: text::Renderer,
 {
     fn default() -> Self {
-        Self::new()
+        Self::new(text::Shaping::Auto)
     }
 }
 
