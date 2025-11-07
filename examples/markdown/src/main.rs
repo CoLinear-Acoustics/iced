@@ -6,7 +6,7 @@ use iced::highlighter;
 use iced::time::{self, Instant, milliseconds};
 use iced::widget::{
     button, center_x, container, hover, image, markdown, operation, right, row,
-    scrollable, sensor, space, text_editor, toggler,
+    scrollable, sensor, space, text::Shaping, text_editor, toggler,
 };
 use iced::window;
 use iced::{
@@ -72,7 +72,10 @@ impl Markdown {
         (
             Self {
                 content: markdown::Content::parse(INITIAL_CONTENT),
-                raw: text_editor::Content::with_text(INITIAL_CONTENT),
+                raw: text_editor::Content::with_text(
+                    INITIAL_CONTENT,
+                    Shaping::Advanced,
+                ),
                 images: HashMap::new(),
                 mode: Mode::Preview,
                 theme: Theme::TokyoNight,

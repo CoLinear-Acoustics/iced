@@ -46,7 +46,7 @@ impl Editor {
         (
             Self {
                 file: None,
-                content: text_editor::Content::new(),
+                content: text_editor::Content::new(text::Shaping::Advanced),
                 theme: highlighter::Theme::SolarizedDark,
                 word_wrap: true,
                 is_loading: true,
@@ -87,7 +87,8 @@ impl Editor {
             Message::NewFile => {
                 if !self.is_loading {
                     self.file = None;
-                    self.content = text_editor::Content::new();
+                    self.content =
+                        text_editor::Content::new(text::Shaping::Advanced);
                 }
 
                 Task::none()
@@ -110,7 +111,10 @@ impl Editor {
 
                 if let Ok((path, contents)) = result {
                     self.file = Some(path);
-                    self.content = text_editor::Content::with_text(&contents);
+                    self.content = text_editor::Content::with_text(
+                        &contents,
+                        text::Shaping::Advanced,
+                    );
                 }
 
                 Task::none()

@@ -8,6 +8,7 @@ use crate::core::{Font, Pixels, Point, Rectangle, Size};
 use crate::text;
 
 use cosmic_text::Edit as _;
+use iced_core::text::Shaping;
 
 use std::borrow::Cow;
 use std::fmt;
@@ -24,6 +25,7 @@ struct Internal {
     bounds: Size,
     topmost_line_changed: Option<usize>,
     version: text::Version,
+    shaping: cosmic_text::Shaping,
 }
 
 impl Editor {
@@ -61,7 +63,7 @@ impl Editor {
 impl editor::Editor for Editor {
     type Font = Font;
 
-    fn with_text(text: &str) -> Self {
+    fn with_text(text: &str, shaping: Shaping) -> Self {
         let mut buffer = cosmic_text::Buffer::new_empty(cosmic_text::Metrics {
             font_size: 1.0,
             line_height: 1.0,
@@ -70,17 +72,20 @@ impl editor::Editor for Editor {
         let mut font_system =
             text::font_system().write().expect("Write font system");
 
+        let shaping = to_shaping(shaping);
+
         buffer.set_text(
             font_system.raw(),
             text,
             &cosmic_text::Attrs::new(),
-            cosmic_text::Shaping::Advanced,
+            shaping,
             None,
         );
 
         Editor(Some(Arc::new(Internal {
             editor: cosmic_text::Editor::new(buffer),
             version: font_system.version(),
+            shaping,
             ..Default::default()
         })))
     }
@@ -409,6 +414,20 @@ impl editor::Editor for Editor {
                             cosmic_text::Action::Delete,
                         );
                     }
+                    Edit::ReplaceAll(text) => {
+                        let buffer = buffer_mut_from_editor(editor);
+
+                        buffer.set_rich_text(
+                            font_system.raw(),
+                            std::iter::once((
+                                &**text,
+                                cosmic_text::Attrs::new(),
+                            )),
+                            &cosmic_text::Attrs::new(),
+                            internal.shaping,
+                            None,
+                        );
+                    }
                 }
 
                 let cursor = editor.cursor();
@@ -683,6 +702,7 @@ impl Default for Internal {
             bounds: Size::ZERO,
             topmost_line_changed: None,
             version: text::Version::default(),
+            shaping: cosmic_text::Shaping::Advanced,
         }
     }
 }
@@ -796,6 +816,14 @@ fn to_motion(motion: Motion) -> cosmic_text::Motion {
         Motion::PageDown => cosmic_text::Motion::PageDown,
         Motion::DocumentStart => cosmic_text::Motion::BufferStart,
         Motion::DocumentEnd => cosmic_text::Motion::BufferEnd,
+    }
+}
+
+fn to_shaping(shaping: Shaping) -> cosmic_text::Shaping {
+    match shaping {
+        Shaping::Auto => cosmic_text::Shaping::Advanced,
+        Shaping::Basic => cosmic_text::Shaping::Basic,
+        Shaping::Advanced => cosmic_text::Shaping::Advanced,
     }
 }
 
