@@ -424,7 +424,7 @@ impl editor::Editor for Editor {
                                 cosmic_text::Attrs::new(),
                             )),
                             &cosmic_text::Attrs::new(),
-                            self.internal().shaping,
+                            internal.shaping,
                             None,
                         );
                     }
