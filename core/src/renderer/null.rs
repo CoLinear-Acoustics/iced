@@ -2,7 +2,7 @@ use crate::alignment;
 use crate::image::{self, Image};
 use crate::renderer::{self, Renderer};
 use crate::svg;
-use crate::text::{self, Text};
+use crate::text::{self, Shaping, Text};
 use crate::{
     Background, Color, Font, Pixels, Point, Rectangle, Size, Transformation,
 };
@@ -154,7 +154,7 @@ impl text::Paragraph for () {
 impl text::Editor for () {
     type Font = Font;
 
-    fn with_text(_text: &str) -> Self {}
+    fn with_text(_text: &str, _shaping: Shaping) -> Self {}
 
     fn is_empty(&self) -> bool {
         true

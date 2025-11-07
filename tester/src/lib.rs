@@ -370,6 +370,7 @@ impl<P: Program + 'static> Tester<P> {
                         .map(Instruction::to_string)
                         .collect::<Vec<_>>()
                         .join("\n"),
+                    text::Shaping::Advanced,
                 ));
 
                 Task::none()

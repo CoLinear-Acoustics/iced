@@ -1,6 +1,6 @@
 //! Edit text.
 use crate::text::highlighter::{self, Highlighter};
-use crate::text::{LineHeight, Wrapping};
+use crate::text::{LineHeight, Shaping, Wrapping};
 use crate::{Pixels, Point, Rectangle, Size};
 
 use std::borrow::Cow;
@@ -12,7 +12,7 @@ pub trait Editor: Sized + Default {
     type Font: Copy + PartialEq + Default;
 
     /// Creates a new [`Editor`] laid out with the given text.
-    fn with_text(text: &str) -> Self;
+    fn with_text(text: &str, shaping: Shaping) -> Self;
 
     /// Returns true if the [`Editor`] has no contents.
     fn is_empty(&self) -> bool;
@@ -114,6 +114,8 @@ pub enum Edit {
     Backspace,
     /// Delete the next character.
     Delete,
+    /// Replace all the text in the editor
+    ReplaceAll(Arc<String>),
 }
 
 /// A cursor movement.
