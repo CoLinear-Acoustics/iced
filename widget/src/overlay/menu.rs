@@ -249,7 +249,7 @@ where
         let limits = layout::Limits::new(
             Size::ZERO,
             Size::new(
-                bounds.width - self.position.x,
+                bounds.width,
                 if space_below > space_above {
                     space_below
                 } else {
@@ -262,10 +262,18 @@ where
         let node = self.list.layout(self.state, renderer, &limits);
         let size = node.size();
 
-        node.move_to(if space_below > space_above {
-            self.position + Vector::new(0.0, self.target_height)
+        // Push menu to the left when it would otherwise be clipped by the right-hand edge of the window
+        let menu_right = self.position.x + size.width;
+        let left_shift = if (menu_right) > bounds.width {
+            menu_right - bounds.width
         } else {
-            self.position - Vector::new(0.0, size.height)
+            0.0
+        };
+
+        node.move_to(if space_below > space_above {
+            self.position + Vector::new(-left_shift, self.target_height)
+        } else {
+            self.position - Vector::new(left_shift, size.height)
         })
     }
 
