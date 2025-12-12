@@ -1,7 +1,7 @@
 //! Platform specific settings for Windows.
 
 /// The platform specific window settings of an application.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct PlatformSpecific {
     /// Drag and drop support
     pub drag_and_drop: bool,
