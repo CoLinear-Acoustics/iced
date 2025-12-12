@@ -19,6 +19,9 @@ pub struct PlatformSpecific {
     ///
     /// Supported starting with Windows 11 Build 22000.
     pub corner_preference: CornerPreference,
+    /// Set the application's taskbar icon, also known as `ICON_BIG`. A reasonable ceiling
+    /// is a size of 256x256px.
+    pub taskbar_icon: Option<crate::window::Icon>,
 }
 
 impl Default for PlatformSpecific {
@@ -28,6 +31,7 @@ impl Default for PlatformSpecific {
             skip_taskbar: false,
             undecorated_shadow: false,
             corner_preference: Default::default(),
+            taskbar_icon: None,
         }
     }
 }
