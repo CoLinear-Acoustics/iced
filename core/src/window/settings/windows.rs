@@ -14,6 +14,10 @@ pub struct PlatformSpecific {
     /// The shadow is hidden by default.
     /// Enabling the shadow causes a thin 1px line to appear on the top of the window.
     pub undecorated_shadow: bool,
+
+    /// Set the application's taskbar icon, also known as `ICON_BIG`. A reasonable ceiling
+    /// is a size of 256x256px.
+    pub taskbar_icon: Option<crate::window::Icon>,
 }
 
 impl Default for PlatformSpecific {
@@ -22,6 +26,7 @@ impl Default for PlatformSpecific {
             drag_and_drop: true,
             skip_taskbar: false,
             undecorated_shadow: false,
+            taskbar_icon: None,
         }
     }
 }
