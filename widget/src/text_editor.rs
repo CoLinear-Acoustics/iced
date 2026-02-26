@@ -360,7 +360,6 @@ where
     R: text::Renderer,
 {
     editor: R::Editor,
-    is_dirty: bool,
     shaping: text::Shaping,
 }
 
@@ -377,7 +376,6 @@ where
     pub fn with_text(text: &str, shaping: text::Shaping) -> Self {
         Self(RefCell::new(Internal {
             editor: R::Editor::with_text(text, shaping),
-            is_dirty: true,
             shaping,
         }))
     }
