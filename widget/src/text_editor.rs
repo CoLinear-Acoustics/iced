@@ -378,6 +378,16 @@ where
         }))
     }
 
+    /// Replace the [`Content`]'s existing text with the given text.
+    ///
+    /// This is more efficient than creating a new [`Content`] form scratch
+    /// because it facilitates the reuse of internally cached buffers.
+    pub fn replace_all(&mut self, text: &str) {
+        let internal = self.0.get_mut();
+
+        internal.editor.replace_all(text);
+    }
+
     /// Performs an [`Action`] on the [`Content`].
     pub fn perform(&mut self, action: Action) {
         let internal = self.0.get_mut();

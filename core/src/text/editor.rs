@@ -14,6 +14,10 @@ pub trait Editor: Sized + Default {
     /// Creates a new [`Editor`] laid out with the given text.
     fn with_text(text: &str) -> Self;
 
+    /// Replaces the current text of an [`Editor`], allowing
+    /// it to reuse internally cached buffers.
+    fn replace_all(&mut self, text: &str);
+
     /// Returns true if the [`Editor`] has no contents.
     fn is_empty(&self) -> bool;
 
