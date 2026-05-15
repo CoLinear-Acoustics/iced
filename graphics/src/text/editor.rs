@@ -107,6 +107,23 @@ impl editor::Editor for Editor {
         })))
     }
 
+    fn replace_all(&mut self, text: &str) {
+        self.with_internal_mut(|internal| {
+            let mut font_system = text::font_system().write().expect("Write font system");
+            let editor = &mut internal.editor;
+
+            let buffer = buffer_mut_from_editor(editor);
+
+            buffer.set_text(
+                text,
+                &cosmic_text::Attrs::new(),
+                cosmic_text::Shaping::Advanced,
+                None,
+            );
+            buffer.shape_until_scroll(font_system.raw(), false);
+        });
+    }
+
     fn is_empty(&self) -> bool {
         let buffer = self.buffer();
 

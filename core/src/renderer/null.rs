@@ -163,6 +163,8 @@ impl text::Editor for () {
 
     fn with_text(_text: &str) -> Self {}
 
+    fn replace_all(&mut self, _text: &str) {}
+
     fn is_empty(&self) -> bool {
         true
     }
